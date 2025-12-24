@@ -17,6 +17,12 @@ CREATE TABLE IF NOT EXISTS `prank_visitor_info` (
     `heading` FLOAT COMMENT '移动方向',
     `speed` FLOAT COMMENT '移动速度',
     
+    -- 地址信息（百度地图API）
+    `address` VARCHAR(500) COMMENT '详细地址',
+    `province` VARCHAR(50) COMMENT '省份',
+    `city` VARCHAR(50) COMMENT '城市',
+    `district` VARCHAR(50) COMMENT '区县',
+    
     -- 设备信息
     `platform` VARCHAR(100) COMMENT '操作系统',
     `screen_width` INT COMMENT '屏幕宽度',

@@ -23,6 +23,12 @@ class VisitorInfo(db.Model):
     heading = db.Column(db.Float, comment='移动方向')
     speed = db.Column(db.Float, comment='移动速度')
     
+    # 地址信息（通过百度地图API获取）
+    address = db.Column(db.String(500), comment='详细地址')
+    province = db.Column(db.String(50), comment='省份')
+    city = db.Column(db.String(50), comment='城市')
+    district = db.Column(db.String(50), comment='区县')
+    
     # 设备信息
     platform = db.Column(db.String(100), comment='操作系统')
     screen_width = db.Column(db.Integer, comment='屏幕宽度')
@@ -66,6 +72,10 @@ class VisitorInfo(db.Model):
             'ip_address': self.ip_address,
             'latitude': float(self.latitude) if self.latitude else None,
             'longitude': float(self.longitude) if self.longitude else None,
+            'address': self.address,
+            'province': self.province,
+            'city': self.city,
+            'district': self.district,
             'platform': self.platform,
             'browser_name': self.browser_name,
             'language': self.language,

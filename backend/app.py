@@ -3,6 +3,7 @@ from flask_cors import CORS
 from config import Config
 from models import db, VisitorInfo
 import requests
+import os
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -12,6 +13,57 @@ CORS(app)
 
 # 初始化数据库
 db.init_app(app)
+
+# 百度地图 AK（需要在百度地图开放平台申请）
+BAIDU_MAP_AK = os.getenv('BAIDU_MAP_AK', '')
+
+
+def get_address_from_location(lat, lng):
+    """通过百度地图逆地理编码获取地址"""
+    if not BAIDU_MAP_AK or not lat or not lng:
+        return None, None, None, None
+    
+    try:
+        url = f"https://api.map.baidu.com/reverse_geocoding/v3/?ak={BAIDU_MAP_AK}&output=json&coordtype=wgs84ll&location={lat},{lng}"
+        resp = requests.get(url, timeout=5)
+        data = resp.json()
+        
+        if data.get('status') == 0:
+            result = data.get('result', {})
+            address = result.get('formatted_address', '')
+            component = result.get('addressComponent', {})
+            province = component.get('province', '')
+            city = component.get('city', '')
+            district = component.get('district', '')
+            return address, province, city, district
+    except Exception as e:
+        print(f"百度地图API调用失败: {e}")
+    
+    return None, None, None, None
+
+
+def get_address_from_ip(ip):
+    """通过百度地图IP定位获取地址"""
+    if not BAIDU_MAP_AK or not ip or ip in ('127.0.0.1', 'localhost'):
+        return None, None, None, None
+    
+    try:
+        url = f"https://api.map.baidu.com/location/ip?ak={BAIDU_MAP_AK}&ip={ip}&coor=bd09ll"
+        resp = requests.get(url, timeout=5)
+        data = resp.json()
+        
+        if data.get('status') == 0:
+            content = data.get('content', {})
+            address = content.get('address', '')
+            detail = content.get('address_detail', {})
+            province = detail.get('province', '')
+            city = detail.get('city', '')
+            district = detail.get('district', '')
+            return address, province, city, district
+    except Exception as e:
+        print(f"百度地图IP定位失败: {e}")
+    
+    return None, None, None, None
 
 
 def get_real_ip():
@@ -34,6 +86,19 @@ def collect_info():
         # 获取真实IP
         ip_address = get_real_ip()
         
+        # 获取地址信息
+        lat = data.get('latitude')
+        lng = data.get('longitude')
+        address, province, city, district = None, None, None, None
+        
+        # 优先通过经纬度获取地址
+        if lat and lng:
+            address, province, city, district = get_address_from_location(lat, lng)
+        
+        # 如果没有经纬度，尝试通过IP获取
+        if not address:
+            address, province, city, district = get_address_from_ip(ip_address)
+        
         # 创建访客记录
         visitor = VisitorInfo(
             # 基本信息
@@ -41,13 +106,19 @@ def collect_info():
             user_agent=data.get('userAgent'),
             
             # 位置信息
-            latitude=data.get('latitude'),
-            longitude=data.get('longitude'),
+            latitude=lat,
+            longitude=lng,
             accuracy=data.get('accuracy'),
             altitude=data.get('altitude'),
             altitude_accuracy=data.get('altitudeAccuracy'),
             heading=data.get('heading'),
             speed=data.get('speed'),
+            
+            # 地址信息
+            address=address,
+            province=province,
+            city=city,
+            district=district,
             
             # 设备信息
             platform=data.get('platform'),
