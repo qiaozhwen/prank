@@ -95,4 +95,3 @@ jobs:
             rm -f backend-image.tar frontend-image.tar
             docker image prune -af
             echo "Prank Tool deployment completed!"
-

