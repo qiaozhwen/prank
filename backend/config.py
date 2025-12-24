@@ -12,7 +12,7 @@ class Config:
     DB_PORT = os.getenv('DB_PORT', '3306')
     DB_USER = os.getenv('DB_USERNAME', 'root')
     DB_PASSWORD = os.getenv('DB_PASSWORD', '13524155957Qz@1')
-    DB_NAME = os.getenv('DB_DATABASE', 'freshbird')
+    DB_NAME = os.getenv('DB_DATABASE', 'shop')
 
     # URL 编码密码中的特殊字符
     SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USER}:{quote_plus(DB_PASSWORD)}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4'

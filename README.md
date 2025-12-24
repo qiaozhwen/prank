@@ -59,7 +59,7 @@ DB_HOST = '106.14.227.122'
 DB_PORT = '3306'
 DB_USER = 'root'
 DB_PASSWORD = 'your_password'
-DB_NAME = 'freshbird'
+DB_NAME = 'shop'
 ```
 
 ### API 端点
@@ -89,7 +89,7 @@ DB_NAME = 'freshbird'
 可以使用 SQL 文件初始化：
 
 ```bash
-mysql -u root -p freshbird < sql/init.sql
+mysql -u root -p shop < sql/init.sql
 ```
 
 ## 🔒 安全提示

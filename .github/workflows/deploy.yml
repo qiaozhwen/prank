@@ -1,0 +1,73 @@
+name: Build and Deploy Prank Tool
+
+on:
+  push:
+    branches: [master]
+
+env:
+  BACKEND_IMAGE: prank-backend
+  FRONTEND_IMAGE: prank-frontend
+  SERVER_DEPLOY_PATH: /home/deploy/prank-tool
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 代码检出
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 构建后端镜像
+      - name: Build backend Docker image
+        run: |
+          docker build -t $BACKEND_IMAGE:latest ./backend
+
+      # 构建前端镜像
+      - name: Build frontend Docker image
+        run: |
+          docker build -t $FRONTEND_IMAGE:latest ./frontend
+
+      # 保存镜像为 tar 文件
+      - name: Save Docker images
+        run: |
+          docker save -o backend-image.tar $BACKEND_IMAGE:latest
+          docker save -o frontend-image.tar $FRONTEND_IMAGE:latest
+
+      # 传输镜像到服务器
+      - name: Transfer images to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT || 22 }}
+          source: 'backend-image.tar,frontend-image.tar,docker-compose.yml'
+          target: ${{ env.SERVER_DEPLOY_PATH }}
+
+      # 服务器端部署
+      - name: Remote deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT || 22 }}
+          script: |
+            cd ${{ env.SERVER_DEPLOY_PATH }}
+
+            # 停止并删除旧容器
+            docker stop prank-backend prank-frontend || true
+            docker rm prank-backend prank-frontend || true
+
+            # 加载新镜像
+            docker load -i backend-image.tar
+            docker load -i frontend-image.tar
+
+            # 使用 docker-compose 启动服务
+            docker-compose up -d
+
+            # 清理临时文件
+            rm -f backend-image.tar frontend-image.tar
+            echo "Prank Tool deployment completed!"
+
