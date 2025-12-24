@@ -7,7 +7,7 @@ services:
     container_name: prank-backend
     restart: always
     ports:
-      - "5001:5001"
+      - '5001:5001'
     environment:
       - DB_HOST=106.14.227.122
       - DB_PORT=3306
@@ -23,7 +23,7 @@ services:
     container_name: prank-frontend
     restart: always
     ports:
-      - "8088:80"
+      - '8088:80'
     depends_on:
       - prank-backend
     networks:
@@ -32,4 +32,3 @@ services:
 networks:
   prank-network:
     driver: bridge
-
