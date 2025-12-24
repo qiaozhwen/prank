@@ -15,8 +15,8 @@ class VisitorInfo(db.Model):
     user_agent = db.Column(db.Text, comment='浏览器UA')
     
     # 位置信息
-    latitude = db.Column(db.Decimal(10, 8), comment='纬度')
-    longitude = db.Column(db.Decimal(11, 8), comment='经度')
+    latitude = db.Column(db.Numeric(10, 8), comment='纬度')
+    longitude = db.Column(db.Numeric(11, 8), comment='经度')
     accuracy = db.Column(db.Float, comment='位置精度(米)')
     altitude = db.Column(db.Float, comment='海拔')
     altitude_accuracy = db.Column(db.Float, comment='海拔精度')
