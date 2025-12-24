@@ -90,11 +90,20 @@ def collect_info():
         lng = data.get('longitude')
         address, province, city, district = None, None, None, None
         
-        # 优先通过经纬度获取地址
-        if lat and lng:
+        # 优先使用百度地图前端返回的地址（最精确）
+        if data.get('baiduAddress'):
+            address = data.get('baiduAddress')
+            province = data.get('baiduProvince')
+            city = data.get('baiduCity')
+            district = data.get('baiduDistrict')
+            # 如果有街道信息，追加到地址
+            if data.get('baiduStreet'):
+                address = address + data.get('baiduStreet')
+        # 其次通过经纬度获取地址
+        elif lat and lng:
             address, province, city, district = get_address_from_location(lat, lng)
         
-        # 如果没有经纬度，尝试通过IP获取
+        # 如果都没有，尝试通过IP获取
         if not address:
             address, province, city, district = get_address_from_ip(ip_address)
         

