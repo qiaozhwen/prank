@@ -14,54 +14,51 @@ CORS(app)
 # 初始化数据库
 db.init_app(app)
 
-# 百度地图 AK（需要在百度地图开放平台申请）
-BAIDU_MAP_AK = os.getenv('BAIDU_MAP_AK', '')
-
-
 def get_address_from_location(lat, lng):
-    """通过百度地图逆地理编码获取地址"""
-    if not BAIDU_MAP_AK or not lat or not lng:
+    """通过 Nominatim (OpenStreetMap) 逆地理编码获取地址 - 免费无需注册"""
+    if not lat or not lng:
         return None, None, None, None
     
     try:
-        url = f"https://api.map.baidu.com/reverse_geocoding/v3/?ak={BAIDU_MAP_AK}&output=json&coordtype=wgs84ll&location={lat},{lng}"
-        resp = requests.get(url, timeout=5)
+        # 使用 Nominatim 免费 API
+        url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}&zoom=18&addressdetails=1&accept-language=zh-CN"
+        headers = {'User-Agent': 'PrankTool/1.0'}
+        resp = requests.get(url, headers=headers, timeout=10)
         data = resp.json()
         
-        if data.get('status') == 0:
-            result = data.get('result', {})
-            address = result.get('formatted_address', '')
-            component = result.get('addressComponent', {})
-            province = component.get('province', '')
-            city = component.get('city', '')
-            district = component.get('district', '')
+        if data and 'address' in data:
+            addr = data.get('address', {})
+            address = data.get('display_name', '')
+            province = addr.get('state', '') or addr.get('province', '')
+            city = addr.get('city', '') or addr.get('town', '') or addr.get('county', '')
+            district = addr.get('suburb', '') or addr.get('district', '') or addr.get('neighbourhood', '')
             return address, province, city, district
     except Exception as e:
-        print(f"百度地图API调用失败: {e}")
+        print(f"Nominatim API调用失败: {e}")
     
     return None, None, None, None
 
 
 def get_address_from_ip(ip):
-    """通过百度地图IP定位获取地址"""
-    if not BAIDU_MAP_AK or not ip or ip in ('127.0.0.1', 'localhost'):
+    """通过 ip-api.com 获取IP地址位置 - 免费无需注册"""
+    if not ip or ip in ('127.0.0.1', 'localhost', '::1'):
         return None, None, None, None
     
     try:
-        url = f"https://api.map.baidu.com/location/ip?ak={BAIDU_MAP_AK}&ip={ip}&coor=bd09ll"
+        # 使用 ip-api.com 免费 API
+        url = f"http://ip-api.com/json/{ip}?lang=zh-CN&fields=status,country,regionName,city,district,query"
         resp = requests.get(url, timeout=5)
         data = resp.json()
         
-        if data.get('status') == 0:
-            content = data.get('content', {})
-            address = content.get('address', '')
-            detail = content.get('address_detail', {})
-            province = detail.get('province', '')
-            city = detail.get('city', '')
-            district = detail.get('district', '')
+        if data.get('status') == 'success':
+            country = data.get('country', '')
+            province = data.get('regionName', '')
+            city = data.get('city', '')
+            district = data.get('district', '')
+            address = f"{country}{province}{city}{district}"
             return address, province, city, district
     except Exception as e:
-        print(f"百度地图IP定位失败: {e}")
+        print(f"ip-api.com调用失败: {e}")
     
     return None, None, None, None
 

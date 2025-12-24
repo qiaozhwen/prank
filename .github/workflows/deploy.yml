@@ -80,7 +80,6 @@ jobs:
               -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               -e DB_DATABASE=shop \
-              -e BAIDU_MAP_AK=${{ secrets.BAIDU_MAP_AK }} \
               --restart always \
               prank-backend:latest
 
