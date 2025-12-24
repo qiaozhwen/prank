@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 访客信息管理</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            min-height: 100vh;
+            background: #0f0f23;
+            color: #e0e0e0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a1a3e 0%, #2d1b69 100%);
+            padding: 24px 32px;
+            border-bottom: 1px solid #333;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 span {
+            font-size: 28px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1e1e3f 0%, #2a2a5a 100%);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #333;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #00ff88;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .table-container {
+            background: #1a1a3e;
+            border-radius: 12px;
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #252552;
+            border-bottom: 1px solid #333;
+        }
+
+        .table-header h2 {
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #2a2a5a;
+        }
+
+        th {
+            background: #1e1e3f;
+            color: #888;
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        tr:hover {
+            background: #252552;
+        }
+
+        td {
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .location-link {
+            color: #00ff88;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .location-link:hover {
+            color: #33ffaa;
+            text-decoration: underline;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-chrome { background: #4285f4; color: white; }
+        .badge-safari { background: #007aff; color: white; }
+        .badge-firefox { background: #ff7139; color: white; }
+        .badge-edge { background: #0078d7; color: white; }
+        .badge-unknown { background: #666; color: white; }
+
+        .ip-address {
+            color: #ffcc00;
+        }
+
+        .timestamp {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal {
+            background: #1a1a3e;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #2a2a5a;
+        }
+
+        .detail-label {
+            width: 140px;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: #fff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            word-break: break-all;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state span {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        /* 地图容器 */
+        .map-container {
+            height: 200px;
+            background: #0f0f23;
+            border-radius: 8px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+                font-size: 12px;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><span>🔍</span> 访客信息管理</h1>
+    </div>
+
+    <div class="container">
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="total-count">-</div>
+                <div class="stat-label">总访客数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="today-count">-</div>
+                <div class="stat-label">今日访客</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="location-count">-</div>
+                <div class="stat-label">已获取位置</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <h2>📋 访客列表</h2>
+                <button class="refresh-btn" onclick="loadVisitors()">🔄 刷新数据</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>IP 地址</th>
+                        <th>位置</th>
+                        <th>浏览器</th>
+                        <th>平台</th>
+                        <th>时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="visitors-table">
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <span>📡</span>
+                            加载中...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>📱 访客详情</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- 动态内容 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        async function loadVisitors() {
+            try {
+                const response = await fetch(`${API_URL}/visitors`);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderTable(result.data);
+                    updateStats(result.data);
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+            }
+        }
+
+        function renderTable(visitors) {
+            const tbody = document.getElementById('visitors-table');
+            
+            if (!visitors || visitors.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="empty-state">
+                            <span>📭</span>
+                            暂无访客数据
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = visitors.map(v => `
+                <tr>
+                    <td>#${v.id}</td>
+                    <td class="ip-address">${v.ip_address || '-'}</td>
+                    <td>
+                        ${v.latitude && v.longitude ? 
+                            `<a class="location-link" href="https://www.google.com/maps?q=${v.latitude},${v.longitude}" target="_blank">
+                                📍 ${v.latitude.toFixed(4)}, ${v.longitude.toFixed(4)}
+                            </a>` : 
+                            '<span style="color: #666">未获取</span>'
+                        }
+                    </td>
+                    <td>
+                        <span class="badge badge-${(v.browser_name || 'unknown').toLowerCase()}">
+                            ${v.browser_name || '未知'}
+                        </span>
+                    </td>
+                    <td>${v.platform || '-'}</td>
+                    <td class="timestamp">${v.created_at || '-'}</td>
+                    <td>
+                        <button class="refresh-btn" style="padding: 6px 12px; font-size: 12px;" onclick="showDetail(${v.id})">
+                            详情
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats(visitors) {
+            document.getElementById('total-count').textContent = visitors.length;
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayCount = visitors.filter(v => 
+                v.created_at && v.created_at.startsWith(today)
+            ).length;
+            document.getElementById('today-count').textContent = todayCount;
+
+            const locationCount = visitors.filter(v => v.latitude && v.longitude).length;
+            document.getElementById('location-count').textContent = locationCount;
+        }
+
+        async function showDetail(id) {
+            try {
+                const response = await fetch(`${API_URL}/visitor/${id}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    renderDetailModal(result.data);
+                    document.getElementById('modal-overlay').style.display = 'flex';
+                }
+            } catch (error) {
+                console.error('加载详情失败:', error);
+            }
+        }
+
+        function renderDetailModal(data) {
+            const details = [
+                { label: 'IP 地址', value: data.ip_address },
+                { label: '纬度', value: data.latitude },
+                { label: '经度', value: data.longitude },
+                { label: '位置精度', value: data.accuracy ? `${data.accuracy}米` : null },
+                { label: '海拔', value: data.altitude ? `${data.altitude}米` : null },
+                { label: '操作系统', value: data.platform },
+                { label: '屏幕分辨率', value: data.screen_width ? `${data.screen_width} x ${data.screen_height}` : null },
+                { label: '设备像素比', value: data.device_pixel_ratio },
+                { label: '浏览器', value: data.browser_name ? `${data.browser_name} ${data.browser_version}` : null },
+                { label: '语言', value: data.language },
+                { label: '时区', value: data.timezone },
+                { label: '网络类型', value: data.effective_type || data.connection_type },
+                { label: '下行速度', value: data.downlink ? `${data.downlink} Mbps` : null },
+                { label: '电池电量', value: data.battery_level != null ? `${Math.round(data.battery_level * 100)}%` : null },
+                { label: '充电中', value: data.battery_charging != null ? (data.battery_charging ? '是' : '否') : null },
+                { label: 'CPU 核心数', value: data.hardware_concurrency },
+                { label: '设备内存', value: data.device_memory ? `${data.device_memory} GB` : null },
+                { label: '来源页面', value: data.referrer },
+                { label: '访问时间', value: data.created_at },
+                { label: 'User Agent', value: data.user_agent },
+            ];
+
+            let html = details
+                .filter(d => d.value != null && d.value !== '')
+                .map(d => `
+                    <div class="detail-row">
+                        <div class="detail-label">${d.label}</div>
+                        <div class="detail-value">${d.value}</div>
+                    </div>
+                `).join('');
+
+            // 添加地图
+            if (data.latitude && data.longitude) {
+                html += `
+                    <div class="map-container">
+                        <iframe src="https://maps.google.com/maps?q=${data.latitude},${data.longitude}&z=15&output=embed"></iframe>
+                    </div>
+                `;
+            }
+
+            document.getElementById('modal-body').innerHTML = html;
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        // 初始加载
+        loadVisitors();
+
+        // 每30秒自动刷新
+        setInterval(loadVisitors, 30000);
+    </script>
+</body>
+</html>
+

