@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_SSH_PORT || 22 }}
-          source: 'backend-image.tar,frontend-image.tar,docker-compose.yml'
+          source: 'backend-image.tar,frontend-image.tar'
           target: ${{ env.SERVER_DEPLOY_PATH }}
 
       # 服务器端部署
@@ -60,14 +60,39 @@ jobs:
             docker stop prank-backend prank-frontend || true
             docker rm prank-backend prank-frontend || true
 
+            # 删除旧镜像
+            docker rmi prank-backend:latest prank-frontend:latest || true
+
             # 加载新镜像
             docker load -i backend-image.tar
             docker load -i frontend-image.tar
 
-            # 使用 docker-compose 启动服务
-            docker-compose up -d
+            # 创建网络（如果不存在）
+            docker network create prank-network 2>/dev/null || true
 
-            # 清理临时文件
+            # 启动后端容器
+            docker run -d \
+              --name prank-backend \
+              --network prank-network \
+              -p 5001:5001 \
+              -e DB_HOST=${{ secrets.SERVER_IP }} \
+              -e DB_PORT=3306 \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              -e DB_DATABASE=shop \
+              --restart always \
+              prank-backend:latest
+
+            # 启动前端容器
+            docker run -d \
+              --name prank-frontend \
+              --network prank-network \
+              -p 8088:80 \
+              --restart always \
+              prank-frontend:latest
+
+            # 清理临时文件和无用镜像
             rm -f backend-image.tar frontend-image.tar
+            docker image prune -af
             echo "Prank Tool deployment completed!"
 
