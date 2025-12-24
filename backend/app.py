@@ -40,25 +40,27 @@ def get_address_from_location(lat, lng):
 
 
 def get_address_from_ip(ip):
-    """通过 ip-api.com 获取IP地址位置 - 免费无需注册"""
+    """通过太平洋IP库获取IP地址位置 - 国内免费无需注册"""
     if not ip or ip in ('127.0.0.1', 'localhost', '::1'):
         return None, None, None, None
     
     try:
-        # 使用 ip-api.com 免费 API
-        url = f"http://ip-api.com/json/{ip}?lang=zh-CN&fields=status,country,regionName,city,district,query"
+        # 使用太平洋IP库（国内可访问）
+        url = f"https://whois.pconline.com.cn/ipJson.jsp?ip={ip}&json=true"
         resp = requests.get(url, timeout=5)
+        # 处理 GBK 编码
+        resp.encoding = 'gbk'
         data = resp.json()
         
-        if data.get('status') == 'success':
-            country = data.get('country', '')
-            province = data.get('regionName', '')
+        if data and not data.get('err'):
+            province = data.get('pro', '')
             city = data.get('city', '')
-            district = data.get('district', '')
-            address = f"{country}{province}{city}{district}"
+            district = data.get('region', '')
+            addr = data.get('addr', '')
+            address = addr if addr else f"{province}{city}{district}"
             return address, province, city, district
     except Exception as e:
-        print(f"ip-api.com调用失败: {e}")
+        print(f"太平洋IP库调用失败: {e}")
     
     return None, None, None, None
 
